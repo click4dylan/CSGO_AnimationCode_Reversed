@@ -2083,10 +2083,10 @@ void CCSGOPlayerAnimState::SetupVelocity()
 	float flMaxYawModifier = flYawModifier * m_flMaxYaw;
 	float flMinYawModifier = flYawModifier * m_flMinYaw;
 
-	if (eye_feet_delta <= flMaxYawModifier)
+	if (eye_feet_delta <= flMaxYawModifier) // AngleDiff(m_flGoalFeetYaw, m_flEyeYaw) <= 58
 	{
-		if (flMinYawModifier > eye_feet_delta)
-			m_flGoalFeetYaw = fabs(flMinYawModifier) + m_flEyeYaw;
+		if (flMinYawModifier > eye_feet_delta) // -58 > AngleDiff(m_flGoalFeetYaw, m_flEyeYaw)
+			m_flGoalFeetYaw = fabs(flMinYawModifier) + m_flEyeYaw; // m_flGoalFeetYaw = fabs(58) + m_flEyeYaw
 	}
 	else
 	{
@@ -2103,7 +2103,7 @@ void CCSGOPlayerAnimState::SetupVelocity()
 			((m_flGroundFraction * 20.0f) + 30.0f)
 			* m_flLastClientSideAnimationUpdateTimeDelta);
 
-		m_flNextLowerBodyYawUpdateTime = /*Interfaces::Globals->curtime*/ m_flCurTime + 0.22f;
+		m_flNextLowerBodyYawUpdateTime = Interfaces::Globals->m_flCurTime + 0.22f;
 
 		if (pBaseEntity->GetLowerBodyYaw() != m_flEyeYaw)
 			pBaseEntity->SetLowerBodyYaw(m_flEyeYaw);
@@ -2115,12 +2115,12 @@ void CCSGOPlayerAnimState::SetupVelocity()
 			m_flGoalFeetYaw,
 			m_flLastClientSideAnimationUpdateTimeDelta * 100.0f);
 
-		if (/*Interfaces::Globals->curtime*/ m_flCurTime > m_flNextLowerBodyYawUpdateTime)
+		if (Interfaces::Globals->m_flCurTime > m_flNextLowerBodyYawUpdateTime)
 		{
-			float dt = AngleDiff(m_flGoalFeetYaw, m_flEyeYaw);
-			if (fabsf(dt) > 35.0f)
+			float m_flEyeFeetYawDelta = AngleDiff(m_flGoalFeetYaw, m_flEyeYaw);
+			if (fabsf(m_flEyeFeetYawDelta) > 35.0f)
 			{
-				m_flNextLowerBodyYawUpdateTime = /*Interfaces::Globals->curtime*/ m_flCurTime + 1.1f;
+				m_flNextLowerBodyYawUpdateTime = Interfaces::Globals->m_flCurTime + 1.1f;
 				if (pBaseEntity->GetLowerBodyYaw() != m_flEyeYaw)
 					pBaseEntity->SetLowerBodyYaw(m_flEyeYaw);
 			}
@@ -2139,16 +2139,16 @@ void CCSGOPlayerAnimState::SetupVelocity()
 		m_bInBalanceAdjust = true;
 	}
 
-	C_AnimationLayer *layer3 = pBaseEntity->GetAnimOverlayDirect(LOWERBODY_LAYER);
+	C_AnimationLayer *layer3 = pBaseEntity->GetAnimOverlayDirect(3);
 	if (layer3 && layer3->m_flWeight > 0.0f)
 	{
-		IncrementLayerCycle(LOWERBODY_LAYER, false);
-		LayerWeightAdvance(LOWERBODY_LAYER);
+		IncrementLayerCycle(3, false);
+		LayerWeightAdvance(3);
 	}
 
 	if (m_flSpeed > 0.0f)
 	{
-		//turns speed into an angle
+		// turns speed into an angle
 		float velAngle = (atan2(-m_vVelocity.y, -m_vVelocity.x) * 180.0f) * (1.0f / M_PI);
 
 		if (velAngle < 0.0f)
@@ -2163,7 +2163,7 @@ void CCSGOPlayerAnimState::SetupVelocity()
 	{
 		m_flCurrentMoveDirGoalFeetDelta = m_flGoalMoveDirGoalFeetDelta;
 
-		int sequence = GetLayerSequence(FEET_LAYER);
+		int sequence = GetLayerSequence(6);
 		if (sequence != -1)
 		{
 			if (pBaseEntity->pSeqdesc(sequence)->num_animtags > 0)
@@ -2227,7 +2227,7 @@ void CCSGOPlayerAnimState::SetupVelocity()
 	}
 	else
 	{
-		if (GetLayerWeight(SILENCERCHANGESEQUENCE_LAYER) >= 1.0f)
+		if (GetLayerWeight(7) >= 1.0f)
 		{
 			m_flCurrentMoveDirGoalFeetDelta = m_flGoalMoveDirGoalFeetDelta;
 		}
@@ -2236,7 +2236,7 @@ void CCSGOPlayerAnimState::SetupVelocity()
 			float flDuckSpeedClamp = clamp(m_flDuckingSpeed, 0.0f, 1.0f);
 			float flRunningSpeedClamp = clamp(m_flRunningSpeed, 0.0f, 1.0f);
 			float flLerped = ((flDuckSpeedClamp - flRunningSpeedClamp) * m_fDuckAmount) + flRunningSpeedClamp;
-			float flBiasMove = /*powf(flLerped, 2.4739397f); //*/Bias(flLerped, 0.18f);
+			float flBiasMove = Bias(flLerped, 0.18f);
 			m_flCurrentMoveDirGoalFeetDelta = AngleNormalize(((flBiasMove + 0.1f) * m_flFeetVelDirDelta) + m_flCurrentMoveDirGoalFeetDelta);
 		}
 	}
@@ -2245,7 +2245,7 @@ void CCSGOPlayerAnimState::SetupVelocity()
 
 	float eye_goalfeet_delta = AngleDiff(m_flEyeYaw, m_flGoalFeetYaw);
 
-	float new_body_yaw_pose = 0.0f; //not initialized?
+	float new_body_yaw_pose = 0.0f; // not initialized?
 
 	if (eye_goalfeet_delta < 0.0f || m_flMaxYaw == 0.0f)
 	{
